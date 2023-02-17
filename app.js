@@ -1,22 +1,32 @@
 const express = require('express')
-const bodyParser= require('body-parser');
+const bodyParser = require('body-parser');
 const app = express()
 const port = 4000
+
+require('dotenv').config();
 app.bodyParser().json();
 
-app.get('/', (req, res) => res.send('Hello World!'))
-// Setup a webhook route
 app.use(bodyParser.json())
-app.post('/msgwebhook', (req, res) => {
-  console.log(req.body) // print all response
 
-  //messageFrom=req.body['data']['from'] // sender number
-  //messageMsg=req.body['data']['body'] // Message text
-  res.status(200).end()
+const mytoken = process.env.MYTOKEN;
+
+//to verify the callback url from dashboard side - cloud api side
+app.get('/webhook', (req, res) => {
+    let mode = req.query["hub.mode"];
+    let challange = req.query["hub.challenge"];
+    let token = req.query["hub.verify_token"];
+
+
+    if (mode && token) {
+
+        if (mode === "subscribe" && token === mytoken) {
+            res.status(200).send(challange);
+        } else {
+            res.status(403);
+        }
+
+    }
 })
 
-app.use(bodyParser.json())
 app.get('/', (req, res) => res.send('Hello World!'))
-
-
 app.listen(port, () => console.log(`Example app listening on port ${port}!`))
